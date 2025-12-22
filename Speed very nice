@@ -1,0 +1,44 @@
+local player = game.Players.LocalPlayer
+
+-- สร้าง GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "SpeedGUI"
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- สร้างปุ่ม
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 150, 0, 50)
+button.Position = UDim2.new(0, 20, 0.7, 0)
+button.Text = "Speed: OFF"
+button.TextScaled = true
+button.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+button.Parent = gui
+
+-- ค่าความเร็ว
+local normalSpeed = 16
+local fastSpeed = 32
+local speedOn = false
+
+-- ฟังก์ชันกดปุ่ม
+button.MouseButton1Click:Connect(function()
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+
+    speedOn = not speedOn
+
+    if speedOn then
+        humanoid.WalkSpeed = fastSpeed
+        button.Text = "Speed: ON"
+        button.BackgroundColor3 = Color3.fromRGB(100, 255, 100)
+    else
+        humanoid.WalkSpeed = normalSpeed
+        button.Text = "Speed: OFF"
+        button.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+    end
+end)
+
+-- กันตายแล้วสปีดหาย
+player.CharacterAdded:Connect(function(character)
+    local humanoid = character:WaitForChild("Humanoid")
+    humanoid.WalkSpeed = speedOn and fastSpeed or normalSpeed
+end)
