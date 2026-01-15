@@ -1,0 +1,113 @@
+--// Mobile SPEED Input (REAL Draggable Group)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+local CURRENT_SPEED = 16
+
+--================ SPEED SYSTEM =================
+RunService.RenderStepped:Connect(function()
+    local char = LocalPlayer.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.WalkSpeed = CURRENT_SPEED
+    end
+end)
+
+--================ GUI =================
+local gui = Instance.new("ScreenGui")
+gui.Name = "SpeedDragGUI"
+gui.ResetOnSpawn = false
+gui.Parent = game:GetService("CoreGui")
+
+-- FRAME รวม
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0,220,0,45)
+frame.Position = UDim2.new(0.05,0,0.65,0)
+frame.BackgroundColor3 = Color3.fromRGB(35,35,35)
+frame.Parent = gui
+
+-- 🔹 DRAG BAR (ตัวลาก)
+local dragBar = Instance.new("TextButton")
+dragBar.Size = UDim2.new(1,0,0,10)
+dragBar.Position = UDim2.new(0,0,0,0)
+dragBar.Text = ""
+dragBar.BackgroundColor3 = Color3.fromRGB(90,90,90)
+dragBar.AutoButtonColor = false
+dragBar.Parent = frame
+
+-- TextBox
+local box = Instance.new("TextBox")
+box.Size = UDim2.new(0,150,0,35)
+box.Position = UDim2.new(0,0,0,10)
+box.PlaceholderText = "Speed (16/50/100)"
+box.Text = ""
+box.TextScaled = true
+box.Font = Enum.Font.SourceSansBold
+box.TextColor3 = Color3.new(1,1,1)
+box.BackgroundColor3 = Color3.fromRGB(60,60,60)
+box.ClearTextOnFocus = false
+box.Parent = frame
+
+-- SET Button
+local setBtn = Instance.new("TextButton")
+setBtn.Size = UDim2.new(0,70,0,35)
+setBtn.Position = UDim2.new(0,150,0,10)
+setBtn.Text = "SET"
+setBtn.TextScaled = true
+setBtn.Font = Enum.Font.SourceSansBold
+setBtn.TextColor3 = Color3.new(1,1,1)
+setBtn.BackgroundColor3 = Color3.fromRGB(80,200,120)
+setBtn.Parent = frame
+
+--================ DRAG SYSTEM (Mobile Safe) =================
+local dragging = false
+local dragStart, startPos
+
+dragBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch
+    or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.Touch
+    or input.UserInputType == Enum.UserInputType.MouseMovement) then
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch
+    or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+--================ SET SPEED =================
+setBtn.MouseButton1Click:Connect(function()
+    local num = tonumber(box.Text)
+    if num then
+        CURRENT_SPEED = math.clamp(num, 0, 2000)
+        setBtn.Text = "OK"
+        task.delay(0.5, function()
+            setBtn.Text = "SET"
+        end)
+    else
+        setBtn.Text = "ERR"
+        task.delay(0.5, function()
+            setBtn.Text = "SET"
+        end)
+    end
+end)
