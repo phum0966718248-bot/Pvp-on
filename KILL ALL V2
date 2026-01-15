@@ -1,0 +1,242 @@
+--// SERVICES
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Stats = game:GetService("Stats")
+local Lighting = game:GetService("Lighting")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local Camera = workspace.CurrentCamera or workspace:GetPropertyChangedSignal("CurrentCamera"):Wait()
+
+local LOADED = false
+
+--================ ADVANCED LOADING UI =================
+
+local Blur = Instance.new("BlurEffect")
+Blur.Size = 18
+Blur.Parent = Lighting
+
+local ScreenGui = Instance.new("ScreenGui", PlayerGui)
+ScreenGui.ResetOnSpawn = false
+
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0,320,0,185)
+Frame.Position = UDim2.new(0.5,-160,0.5,-92)
+Frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+Frame.BorderSizePixel = 0
+Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,12)
+
+local UIScale = Instance.new("UIScale", Frame)
+UIScale.Scale = math.clamp(Camera.ViewportSize.X / 600, 0.85, 1)
+
+local Stroke = Instance.new("UIStroke", Frame)
+Stroke.Color = Color3.fromRGB(0,170,255)
+Stroke.Thickness = 2
+Stroke.Transparency = 0.25
+
+local Title = Instance.new("TextLabel", Frame)
+Title.Size = UDim2.new(1,-20,0,32)
+Title.Position = UDim2.new(0,10,0,8)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.GothamBold
+Title.TextScaled = true
+Title.TextColor3 = Color3.new(1,1,1)
+
+local Info = Instance.new("TextLabel", Frame)
+Info.Size = UDim2.new(1,-20,0,28)
+Info.Position = UDim2.new(0,10,0,42)
+Info.BackgroundTransparency = 1
+Info.Font = Enum.Font.Gotham
+Info.TextScaled = true
+Info.TextColor3 = Color3.fromRGB(200,200,200)
+
+local Spinner = Instance.new("ImageLabel", Frame)
+Spinner.Size = UDim2.new(0,28,0,28)
+Spinner.Position = UDim2.new(0.5,-14,0,72)
+Spinner.BackgroundTransparency = 1
+Spinner.Image = "rbxassetid://3926305904"
+Spinner.ImageRectOffset = Vector2.new(964,964)
+Spinner.ImageRectSize = Vector2.new(36,36)
+
+local spinConn = RunService.RenderStepped:Connect(function(dt)
+	Spinner.Rotation += dt * 260
+end)
+
+local BarBack = Instance.new("Frame", Frame)
+BarBack.Size = UDim2.new(1,-40,0,16)
+BarBack.Position = UDim2.new(0,20,0.72,0)
+BarBack.BackgroundColor3 = Color3.fromRGB(45,45,45)
+Instance.new("UICorner", BarBack).CornerRadius = UDim.new(0,8)
+
+local BarFill = Instance.new("Frame", BarBack)
+BarFill.Size = UDim2.new(0,0,1,0)
+Instance.new("UICorner", BarFill).CornerRadius = UDim.new(0,8)
+
+local CreditLoad = Instance.new("TextLabel", Frame)
+CreditLoad.Size = UDim2.new(1,-20,0,18)
+CreditLoad.Position = UDim2.new(0,10,1,-22)
+CreditLoad.BackgroundTransparency = 1
+CreditLoad.Text = "By @Phum55"
+CreditLoad.Font = Enum.Font.Gotham
+CreditLoad.TextScaled = true
+CreditLoad.TextColor3 = Color3.fromRGB(150,150,150)
+
+local LoadSound = Instance.new("Sound", Frame)
+LoadSound.SoundId = "rbxassetid://9118823101"
+LoadSound.Looped = true
+LoadSound.Volume = 0.4
+LoadSound:Play()
+
+local DoneSound = Instance.new("Sound", Frame)
+DoneSound.SoundId = "rbxassetid://6026984224"
+DoneSound.Volume = 0.7
+
+local function setProgress(p)
+	BarFill.Size = UDim2.new(p,0,1,0)
+	BarFill.BackgroundColor3 = Color3.fromHSV(p,1,1)
+end
+
+local fps, frames, last = 0,0,tick()
+local fpsConn = RunService.RenderStepped:Connect(function()
+	frames += 1
+	if tick() - last >= 1 then
+		fps = frames
+		frames = 0
+		last = tick()
+	end
+end)
+
+local ping = tonumber(string.match(
+	Stats.Network.ServerStatsItem["Data Ping"]:GetValueString(), "%d+"
+)) or 0
+
+Title.Text = "Checking Connection"
+for i=1,25 do
+	setProgress(i/100)
+	Info.Text = ("Ping: %d ms | FPS: %d"):format(ping, fps)
+	task.wait(0.04)
+end
+
+Title.Text = "Loading Character"
+local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+for i=26,60 do
+	setProgress(i/100)
+	task.wait(0.02)
+end
+
+Title.Text = "Checking Tool"
+repeat task.wait(0.1) until char:FindFirstChildOfClass("Tool")
+for i=61,90 do
+	setProgress(i/100)
+	task.wait(0.02)
+end
+
+Title.Text = "Done"
+Info.Text = "Tap Done to continue"
+for i=91,100 do
+	setProgress(i/100)
+	task.wait(0.015)
+end
+
+local DoneBtn = Instance.new("TextButton", Frame)
+DoneBtn.Size = UDim2.new(0,120,0,32)
+DoneBtn.Position = UDim2.new(0.5,-60,1,-40)
+DoneBtn.Text = "✔ Done"
+DoneBtn.Font = Enum.Font.GothamBold
+DoneBtn.TextScaled = true
+DoneBtn.BackgroundColor3 = Color3.fromRGB(0,170,0)
+DoneBtn.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", DoneBtn).CornerRadius = UDim.new(0,8)
+
+--================ MAIN UI =================
+
+local Gui = Instance.new("ScreenGui", PlayerGui)
+Gui.ResetOnSpawn = false
+Gui.Enabled = false
+
+local Main = Instance.new("Frame", Gui)
+Main.Size = UDim2.new(0,260,0,140)
+Main.Position = UDim2.new(0.5,-130,0.5,-70)
+Main.BackgroundColor3 = Color3.fromRGB(30,30,30)
+Main.Active = true
+Main.Draggable = true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0,10)
+
+local Thanks = Instance.new("TextLabel", Main)
+Thanks.Size = UDim2.new(1,-20,0,24)
+Thanks.Position = UDim2.new(0,10,0,10)
+Thanks.BackgroundTransparency = 1
+Thanks.Text = "Thank you for using"
+Thanks.Font = Enum.Font.Gotham
+Thanks.TextScaled = true
+Thanks.TextColor3 = Color3.fromRGB(200,200,200)
+
+local Btn = Instance.new("TextButton", Main)
+Btn.Size = UDim2.new(1,-20,0,50)
+Btn.Position = UDim2.new(0,10,0,40)
+Btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+Btn.Text = "Kill: OFF"
+Btn.Font = Enum.Font.GothamBold
+Btn.TextScaled = true
+Btn.TextColor3 = Color3.fromRGB(255,0,0)
+Instance.new("UICorner", Btn).CornerRadius = UDim.new(0,8)
+
+local CreditMain = Instance.new("TextLabel", Main)
+CreditMain.Size = UDim2.new(1,-20,0,20)
+CreditMain.Position = UDim2.new(0,10,1,-24)
+CreditMain.BackgroundTransparency = 1
+CreditMain.Text = "By @Phum55"
+CreditMain.Font = Enum.Font.Gotham
+CreditMain.TextScaled = true
+CreditMain.TextColor3 = Color3.fromRGB(150,150,150)
+
+local Enabled = false
+Btn.MouseButton1Click:Connect(function()
+	if not LOADED then return end
+	Enabled = not Enabled
+	Btn.Text = Enabled and "Kill: ON" or "Kill: OFF"
+	Btn.TextColor3 = Enabled and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,0,0)
+end)
+
+DoneBtn.MouseButton1Click:Connect(function()
+	LOADED = true
+	LoadSound:Stop()
+	DoneSound:Play()
+	fpsConn:Disconnect()
+	spinConn:Disconnect()
+	Blur:Destroy()
+	ScreenGui:Destroy()
+	Gui.Enabled = true
+end)
+
+--================ SAFE KILL LOOP =================
+
+local lastHit = 0
+local MAX_DIST = 999999999999999
+
+RunService.RenderStepped:Connect(function()
+	if not Enabled or tick() - lastHit < 0.12 then return end
+	lastHit = tick()
+
+	local char = LocalPlayer.Character
+	if not char then return end
+
+	local tool = char:FindFirstChildOfClass("Tool")
+	if not tool or not tool:FindFirstChild("Handle") then return end
+
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+	if not hrp then return end
+
+	tool:Activate()
+
+	for _,plr in ipairs(Players:GetPlayers()) do
+		if plr ~= LocalPlayer then
+			local c = plr.Character
+			local th = c and c:FindFirstChild("HumanoidRootPart")
+			if th and (hrp.Position - th.Position).Magnitude <= MAX_DIST then
+				firetouchinterest(tool.Handle, th, 0)
+				firetouchinterest(tool.Handle, th, 1)
+			end
+		end
+	end
+end)
