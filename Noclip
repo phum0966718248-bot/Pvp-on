@@ -1,0 +1,48 @@
+--// Mobile NOCLIP Toggle (Real-time)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+local NOCLIP = false
+
+--================ NOCLIP SYSTEM =================
+RunService.Stepped:Connect(function()
+    if NOCLIP then
+        local char = LocalPlayer.Character
+        if char then
+            for _,part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end
+end)
+
+--================ MOBILE GUI =================
+local gui = Instance.new("ScreenGui")
+gui.Name = "MobileNoclipGUI"
+gui.ResetOnSpawn = false
+gui.Parent = game:GetService("CoreGui")
+
+local btn = Instance.new("TextButton")
+btn.Size = UDim2.new(0,200,0,45)
+btn.Position = UDim2.new(0.05,0,0.65,0)
+btn.Text = "NOCLIP : OFF"
+btn.TextScaled = true
+btn.Font = Enum.Font.SourceSansBold
+btn.TextColor3 = Color3.new(1,1,1)
+btn.BackgroundColor3 = Color3.fromRGB(200,80,80)
+btn.Active = true
+btn.Draggable = true
+btn.Parent = gui
+
+--================ TOGGLE =================
+btn.MouseButton1Click:Connect(function()
+    NOCLIP = not NOCLIP
+    btn.Text = NOCLIP and "NOCLIP : ON" or "NOCLIP : OFF"
+    btn.BackgroundColor3 = NOCLIP
+        and Color3.fromRGB(80,200,120)
+        or Color3.fromRGB(200,80,80)
+end)
