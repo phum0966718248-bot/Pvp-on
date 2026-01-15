@@ -1,0 +1,128 @@
+--// Mobile ESP Player + Highlight (Real-time)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+local ESP_ENABLED = false
+local ESPs = {}
+
+--================ COLOR BY HP =================
+local function getColorFromHP(hp, maxHp)
+    local p = hp / maxHp
+    if p > 0.6 then
+        return Color3.fromRGB(0,255,0) -- เขียว
+    elseif p > 0.3 then
+        return Color3.fromRGB(255,170,0) -- ส้ม
+    else
+        return Color3.fromRGB(255,0,0) -- แดง
+    end
+end
+
+--================ CREATE ESP =================
+local function createESP(player)
+    if player == LocalPlayer or ESPs[player] then return end
+
+    local bb = Instance.new("BillboardGui")
+    bb.Size = UDim2.new(0,220,0,45)
+    bb.AlwaysOnTop = true
+    bb.Name = "ESP"
+
+    local txt = Instance.new("TextLabel", bb)
+    txt.Size = UDim2.new(1,0,1,0)
+    txt.BackgroundTransparency = 1
+    txt.TextScaled = true
+    txt.Font = Enum.Font.SourceSansBold
+    txt.TextStrokeTransparency = 0
+
+    local hl = Instance.new("Highlight")
+    hl.FillTransparency = 0.6
+    hl.OutlineTransparency = 0
+    hl.Enabled = false
+
+    ESPs[player] = {BB = bb, HL = hl}
+
+    RunService.RenderStepped:Connect(function()
+        if not ESP_ENABLED then
+            bb.Parent = nil
+            hl.Parent = nil
+            return
+        end
+
+        local char = player.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+        if hum and hrp and hum.Health > 0 then
+            local color = getColorFromHP(hum.Health, hum.MaxHealth)
+
+            bb.Parent = hrp
+            bb.Adornee = hrp
+
+            local dist = math.floor(
+                (Camera.CFrame.Position - hrp.Position).Magnitude
+            )
+
+            txt.Text = string.format(
+                "%s | %d HP | %d Studs",
+                player.Name,
+                math.floor(hum.Health),
+                dist
+            )
+            txt.TextColor3 = color
+
+            hl.Parent = char
+            hl.FillColor = color
+            hl.OutlineColor = color
+            hl.Enabled = true
+        else
+            bb.Parent = nil
+            hl.Parent = nil
+        end
+    end)
+end
+
+--================ PLAYER EVENTS =================
+for _,p in pairs(Players:GetPlayers()) do
+    createESP(p)
+end
+
+Players.PlayerAdded:Connect(createESP)
+
+Players.PlayerRemoving:Connect(function(p)
+    if ESPs[p] then
+        ESPs[p].BB:Destroy()
+        ESPs[p].HL:Destroy()
+        ESPs[p] = nil
+    end
+end)
+
+--================ MOBILE TOGGLE BUTTON =================
+local gui = Instance.new("ScreenGui")
+gui.Name = "ESP_Mobile_GUI"
+gui.ResetOnSpawn = false
+gui.Parent = game:GetService("CoreGui")
+
+local btn = Instance.new("TextButton")
+btn.Size = UDim2.new(0,220,0,45)
+btn.Position = UDim2.new(0.05,0,0.6,0)
+btn.Text = "ESP : OFF"
+btn.TextScaled = true
+btn.Font = Enum.Font.SourceSansBold
+btn.TextColor3 = Color3.new(1,1,1)
+btn.BackgroundColor3 = Color3.fromRGB(200,80,80)
+btn.Active = true
+btn.Draggable = true
+btn.Parent = gui
+
+btn.MouseButton1Click:Connect(function()
+    ESP_ENABLED = not ESP_ENABLED
+    if ESP_ENABLED then
+        btn.Text = "ESP : ON"
+        btn.BackgroundColor3 = Color3.fromRGB(80,200,120)
+    else
+        btn.Text = "ESP : OFF"
+        btn.BackgroundColor3 = Color3.fromRGB(200,80,80)
+    end
+end)
