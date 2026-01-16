@@ -124,8 +124,55 @@ for i=26,60 do
 	task.wait(0.02)
 end
 
+--================ CHECKING TOOL (WITH SKIP @ 3s) =================
+
 Title.Text = "Checking Tool"
-repeat task.wait(0.1) until char:FindFirstChildOfClass("Tool")
+Info.TextColor3 = Color3.fromRGB(200,200,200)
+Info.Text = "Waiting for tool..."
+
+local waitTime = 10
+local skipped = false
+
+local SkipBtn = Instance.new("TextButton", Frame)
+SkipBtn.Size = UDim2.new(0,120,0,32)
+SkipBtn.Position = UDim2.new(0.5,-60,1,-78)
+SkipBtn.Text = "⏭ Skip"
+SkipBtn.Font = Enum.Font.GothamBold
+SkipBtn.TextScaled = true
+SkipBtn.BackgroundColor3 = Color3.fromRGB(170,170,0)
+SkipBtn.TextColor3 = Color3.new(1,1,1)
+SkipBtn.Visible = false
+Instance.new("UICorner", SkipBtn).CornerRadius = UDim.new(0,8)
+
+SkipBtn.MouseButton1Click:Connect(function()
+	skipped = true
+end)
+
+for t = waitTime, 0, -1 do
+	if char:FindFirstChildOfClass("Tool") then
+		break
+	end
+
+	-- ปุ่มขึ้นเมื่อเหลือ 3 วิ
+	if t <= 3 then
+		SkipBtn.Visible = true
+		Info.TextColor3 = Color3.fromRGB(255,80,80)
+	else
+		Info.TextColor3 = Color3.fromRGB(200,200,200)
+	end
+
+	Info.Text = ("Waiting for tool... %d"):format(t)
+
+	if skipped then
+		break
+	end
+
+	task.wait(1)
+end
+
+SkipBtn:Destroy()
+Info.TextColor3 = Color3.fromRGB(200,200,200)
+-- Progress ต่อ
 for i=61,90 do
 	setProgress(i/100)
 	task.wait(0.02)
@@ -133,11 +180,13 @@ end
 
 Title.Text = "Done"
 Info.Text = "Tap Done to continue"
+
 for i=91,100 do
 	setProgress(i/100)
 	task.wait(0.015)
 end
 
+-- Done Button
 local DoneBtn = Instance.new("TextButton", Frame)
 DoneBtn.Size = UDim2.new(0,120,0,32)
 DoneBtn.Position = UDim2.new(0.5,-60,1,-40)
@@ -147,7 +196,6 @@ DoneBtn.TextScaled = true
 DoneBtn.BackgroundColor3 = Color3.fromRGB(0,170,0)
 DoneBtn.TextColor3 = Color3.new(1,1,1)
 Instance.new("UICorner", DoneBtn).CornerRadius = UDim.new(0,8)
-
 --================ MAIN UI =================
 
 local Gui = Instance.new("ScreenGui", PlayerGui)
@@ -211,11 +259,11 @@ end)
 
 --================ SAFE KILL LOOP =================
 
-local lastHit = 0
+local lastHit = 0.15
 local MAX_DIST = 999999999999999
 
 RunService.RenderStepped:Connect(function()
-	if not Enabled or tick() - lastHit < 0.12 then return end
+	if not Enabled or tick() - lastHit < 0.1 then return end
 	lastHit = tick()
 
 	local char = LocalPlayer.Character
